@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -19,22 +19,42 @@ import { Button } from '@/components/ui/Button';
 import type { TodoFormValues } from './TodoForm';
 
 export interface AddTaskModalProps {
+  mode: 'create' | 'edit';
+  initialValues?: TodoFormValues;
   onSubmit: (values: TodoFormValues) => Promise<void> | void;
   onClose: () => void;
 }
 
-// Simple popup for creating a new task.
-// It collects title, description, deadline date, and category,
+// Simple popup for creating and editing a task.
+// It collects title, description, date, and category,
 // and delegates the actual creation and authentication to the parent.
 
-export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [deadlineDate, setDeadlineDate] = useState('');
-  const [category, setCategory] = useState('');
+export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTaskModalProps) {
+  const [title, setTitle] = useState(initialValues?.title ?? '');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [deadlineDate, setDeadlineDate] = useState(initialValues?.deadlineDate ?? '');
+  const [category, setCategory] = useState(initialValues?.category ?? '');
+  const [isCompleted, setIsCompleted] = useState<boolean>(Boolean(initialValues?.isCompleted));
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [dateValue, setDateValue] = useState<Date | null>(null);
+
+  // Keep local form state in sync when editing a different task.
+  useEffect(() => {
+    if (initialValues) {
+      setTitle(initialValues.title ?? '');
+      setDescription(initialValues.description ?? '');
+      setDeadlineDate(initialValues.deadlineDate ?? '');
+      setCategory(initialValues.category ?? '');
+      setIsCompleted(Boolean(initialValues.isCompleted));
+    } else {
+      setTitle('');
+      setDescription('');
+      setDeadlineDate('');
+      setCategory('');
+      setIsCompleted(false);
+    }
+  }, [initialValues, mode]);
 
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
@@ -47,6 +67,7 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
       description: description.trim() || undefined,
       deadlineDate: deadlineDate.trim() || undefined,
       category: category.trim() || undefined,
+      isCompleted,
     });
 
     // Reset local state after submit. The parent will close the popup.
@@ -83,12 +104,14 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
     }
   };
 
+  const buttonLabel = mode === 'edit' ? 'Save' : 'Add';
+
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.overlay}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.title}>New Task</Text>
+            <Text style={styles.title}>{mode === 'edit' ? 'Edit Task' : 'New Task'}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <Text style={styles.closeIcon}>×</Text>
             </Pressable>
@@ -123,6 +146,16 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
                 {category || 'Select category'}
               </Text>
             </Pressable>
+            {mode === 'edit' && (
+              <Pressable
+                style={styles.completedRow}
+                onPress={() => setIsCompleted((prev) => !prev)}>
+                <View style={[styles.completedCheckbox, isCompleted && styles.completedCheckboxChecked]}>
+                  {isCompleted && <Text style={styles.completedCheckboxMark}>✓</Text>}
+                </View>
+                <Text style={styles.completedLabel}>Mark as completed</Text>
+              </Pressable>
+            )}
             {isCategoryOpen && (
               <View style={styles.dropdownMenu}>
                 {['Work', 'Personal', 'Shopping', 'Others'].map((option) => (
@@ -140,7 +173,7 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
             )}
           </View>
           <Button
-            label="Submit"
+            label={buttonLabel}
             onPress={handleSubmit}
             style={styles.submitButton}
             labelStyle={{ color: '#ffffff' }}
@@ -266,6 +299,34 @@ const styles = StyleSheet.create({
   dropdownItemLabel: {
     fontSize: 14,
     color: '#111827',
+  },
+  completedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  completedCheckbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedCheckboxChecked: {
+    backgroundColor: '#6362F9',
+    borderColor: '#6362F9',
+  },
+  completedCheckboxMark: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  completedLabel: {
+    fontSize: 13,
+    color: '#4b5563',
   },
   datePickerContainer: {
     position: 'absolute',

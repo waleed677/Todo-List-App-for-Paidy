@@ -13,6 +13,7 @@ export interface TodoFormValues {
   description?: string;
   deadlineDate?: string;
   category?: string;
+  isCompleted?: boolean;
 }
 
 export interface TodoFormProps {

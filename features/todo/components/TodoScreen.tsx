@@ -49,7 +49,7 @@ type FilterValue = 'all' | 'completed' | 'pending';
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, deleteTodo, toggleTodoStatus } = useTodoStore();
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null);
   const [filter, setFilter] = useState<FilterValue>('all');
   const { withAuth } = useTodoActions();
   const todayLabel = useMemo(() => formatTodayLabel(new Date()), []);
@@ -64,33 +64,28 @@ export default function TodoScreen() {
     return todos;
   }, [todos, filter]);
 
-  const formMode = editingTodo ? 'edit' : 'create';
-  const formInitialValues: TodoFormValues | undefined = useMemo(
-    () =>
-      editingTodo
-        ? {
-            title: editingTodo.title,
-            description: editingTodo.description,
-            deadlineDate: editingTodo.deadlineDate,
-            category: editingTodo.category,
-          }
-        : undefined,
-    [editingTodo],
-  );
-
   const handleSubmit = async (values: TodoFormValues) => {
     if (editingTodo) {
-      const result = await withAuth(() =>
+      const result = await withAuth(async () => {
         updateTodo({
           id: editingTodo.id,
           title: values.title,
           description: values.description,
           deadlineDate: values.deadlineDate,
           category: values.category,
-        }),
-      );
+        });
+
+        // If user changed completion status, sync the store.
+        if (typeof values.isCompleted === 'boolean') {
+          const currentlyCompleted = editingTodo.status === 'completed';
+          if (values.isCompleted !== currentlyCompleted) {
+            toggleTodoStatus(editingTodo.id);
+          }
+        }
+      });
       if (result !== null) {
         setEditingTodo(null);
+        setModalMode(null);
       }
     } else {
       const result = await withAuth(() =>
@@ -102,14 +97,14 @@ export default function TodoScreen() {
         }),
       );
       if (result !== null) {
-        setIsCreating(false);
+        setModalMode(null);
       }
     }
   };
 
   const handleCancelEdit = () => {
     setEditingTodo(null);
-    setIsCreating(false);
+    setModalMode(null);
   };
 
   const handleToggleStatus = async (id: string) => {
@@ -118,6 +113,7 @@ export default function TodoScreen() {
 
   const handleEdit = (item: TodoItem) => {
     setEditingTodo(item);
+    setModalMode('edit');
   };
 
   const handleDelete = async (id: string) => {
@@ -128,7 +124,7 @@ export default function TodoScreen() {
   };
 
   const handleStartCreate = () => {
-    setIsCreating(true);
+    setModalMode('create');
     setEditingTodo(null);
   };
 
@@ -146,15 +142,6 @@ export default function TodoScreen() {
         </View>
 
         <View style={styles.card}>
-          {editingTodo && (
-            <TodoForm
-              mode={formMode}
-              initialValues={formInitialValues}
-              onSubmit={handleSubmit}
-              onCancelEdit={handleCancelEdit}
-            />
-          )}
-
           <View style={styles.filterRow}>
             {(['all', 'completed', 'pending'] as FilterValue[]).map((value) => (
               <Pressable
@@ -192,8 +179,23 @@ export default function TodoScreen() {
             </Pressable>
           )}
 
-          {isCreating && (
-            <AddTaskModal onSubmit={handleSubmit} onClose={() => setIsCreating(false)} />
+          {modalMode && (
+            <AddTaskModal
+              mode={modalMode}
+              initialValues={
+                modalMode === 'edit' && editingTodo
+                  ? {
+                      title: editingTodo.title,
+                      description: editingTodo.description,
+                      deadlineDate: editingTodo.deadlineDate,
+                      category: editingTodo.category,
+                      isCompleted: editingTodo.status === 'completed',
+                    }
+                  : undefined
+              }
+              onSubmit={handleSubmit}
+              onClose={handleCancelEdit}
+            />
           )}
         </View>
       </View>

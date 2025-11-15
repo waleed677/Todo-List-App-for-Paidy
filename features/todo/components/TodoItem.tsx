@@ -31,7 +31,11 @@ export function TodoItem({ item, onToggleStatus, onEdit, onDelete }: TodoItemPro
             <Text style={styles.dateText}>{item.deadlineDate}</Text>
           ) : null}
           <Text style={[styles.title, isCompleted && styles.titleCompleted]}>{item.title}</Text>
-          {item.description ? <Text style={styles.description}>{item.description}</Text> : null}
+          {item.description ? (
+            <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">
+              {item.description}
+            </Text>
+          ) : null}
         </View>
       </Pressable>
       <View style={styles.actionsColumn}>
