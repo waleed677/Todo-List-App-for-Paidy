@@ -184,7 +184,16 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
             <View style={styles.datePickerContainer}>
               <View style={styles.datePickerHeader}>
                 <Text style={styles.datePickerLabel}>Select date</Text>
-                <Pressable onPress={() => setIsDatePickerOpen(false)} hitSlop={8}>
+                <Pressable
+                  onPress={() => {
+                    if (!deadlineDate) {
+                      const base = dateValue ?? new Date();
+                      setDateValue(base);
+                      setDeadlineDate(formatDate(base));
+                    }
+                    setIsDatePickerOpen(false);
+                  }}
+                  hitSlop={8}>
                   <Text style={styles.datePickerDone}>Done</Text>
                 </Pressable>
               </View>
@@ -194,6 +203,7 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
                 value={dateValue ?? new Date()}
                 onChange={handleDateChange}
                 themeVariant="light"
+                minimumDate={new Date()}
               />
             </View>
           )}

@@ -12,11 +12,23 @@ export interface LocalAuthResult {
   error?: string;
 }
 
+// Simple in-memory flag to keep track of a "session" authentication.
+// Once the user has successfully authenticated, we treat the session as
+// trusted for the lifetime of the app process and skip re-prompting.
+let hasSessionAuth = false;
+
 export function useLocalAuth() {
   const [status, setStatus] = useState<LocalAuthStatus>('idle');
   const [lastError, setLastError] = useState<string | undefined>();
 
   const authenticate = useCallback(async (): Promise<LocalAuthResult> => {
+    // If we've already authenticated during this app session,
+    // skip the system prompt and allow the action.
+    if (hasSessionAuth) {
+      setStatus('authenticated');
+      return { success: true };
+    }
+
     setStatus('pending');
     setLastError(undefined);
 
@@ -60,6 +72,7 @@ export function useLocalAuth() {
       }
 
       setStatus('authenticated');
+      hasSessionAuth = true;
       return { success: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown authentication error.';

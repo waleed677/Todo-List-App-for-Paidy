@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Body, Title } from '@/components/ui/Typography';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { TodoItem } from '@/features/todo/types';
 import { useTodoStore } from '@/features/todo/state/todoStore';
-import { useTodoActions } from '@/features/todo/hooks/useTodoActions';
+import { useLocalAuth } from '@/features/auth/hooks/useLocalAuth';
 
 import { AddTaskModal } from './AddTaskModal';
 import { TodoForm, type TodoFormValues } from './TodoForm';
@@ -51,7 +52,8 @@ export default function TodoScreen() {
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null);
   const [filter, setFilter] = useState<FilterValue>('all');
-  const { withAuth } = useTodoActions();
+  const { authenticate } = useLocalAuth();
+  const [isAuthed, setIsAuthed] = useState(false);
   const todayLabel = useMemo(() => formatTodayLabel(new Date()), []);
 
   const filteredTodos = useMemo(() => {
@@ -66,39 +68,32 @@ export default function TodoScreen() {
 
   const handleSubmit = async (values: TodoFormValues) => {
     if (editingTodo) {
-      const result = await withAuth(async () => {
-        updateTodo({
-          id: editingTodo.id,
-          title: values.title,
-          description: values.description,
-          deadlineDate: values.deadlineDate,
-          category: values.category,
-        });
-
-        // If user changed completion status, sync the store.
-        if (typeof values.isCompleted === 'boolean') {
-          const currentlyCompleted = editingTodo.status === 'completed';
-          if (values.isCompleted !== currentlyCompleted) {
-            toggleTodoStatus(editingTodo.id);
-          }
-        }
+      updateTodo({
+        id: editingTodo.id,
+        title: values.title,
+        description: values.description,
+        deadlineDate: values.deadlineDate,
+        category: values.category,
       });
-      if (result !== null) {
-        setEditingTodo(null);
-        setModalMode(null);
+
+      // If user changed completion status, sync the store.
+      if (typeof values.isCompleted === 'boolean') {
+        const currentlyCompleted = editingTodo.status === 'completed';
+        if (values.isCompleted !== currentlyCompleted) {
+          toggleTodoStatus(editingTodo.id);
+        }
       }
+
+      setEditingTodo(null);
+      setModalMode(null);
     } else {
-      const result = await withAuth(() =>
-        addTodo({
-          title: values.title,
-          description: values.description,
-          deadlineDate: values.deadlineDate,
-          category: values.category,
-        }),
-      );
-      if (result !== null) {
-        setModalMode(null);
-      }
+      addTodo({
+        title: values.title,
+        description: values.description,
+        deadlineDate: values.deadlineDate,
+        category: values.category,
+      });
+      setModalMode(null);
     }
   };
 
@@ -107,25 +102,60 @@ export default function TodoScreen() {
     setModalMode(null);
   };
 
+  const ensureAuthedOrPrompt = async (): Promise<boolean> => {
+    if (isAuthed) {
+      return true;
+    }
+    const result = await authenticate();
+    if (result.success) {
+      setIsAuthed(true);
+      return true;
+    }
+    Alert.alert('Authentication required', 'Please authenticate to modify your tasks.');
+    return false;
+  };
+
   const handleToggleStatus = async (id: string) => {
-    await withAuth(() => toggleTodoStatus(id));
+    const ok = await ensureAuthedOrPrompt();
+    if (!ok) return;
+    toggleTodoStatus(id);
   };
 
   const handleEdit = (item: TodoItem) => {
+    if (!isAuthed) {
+      // Ask the user to log in first.
+      ensureAuthedOrPrompt().then((ok) => {
+        if (!ok) return;
+        setEditingTodo(item);
+        setModalMode('edit');
+      });
+      return;
+    }
     setEditingTodo(item);
     setModalMode('edit');
   };
 
   const handleDelete = async (id: string) => {
-    const result = await withAuth(() => deleteTodo(id));
-    if (result !== null && editingTodo?.id === id) {
+    const ok = await ensureAuthedOrPrompt();
+    if (!ok) return;
+    deleteTodo(id);
+    if (editingTodo?.id === id) {
       setEditingTodo(null);
     }
   };
 
   const handleStartCreate = () => {
-    setModalMode('create');
-    setEditingTodo(null);
+    // For safety, still ensure auth; if already authed this is instant.
+    ensureAuthedOrPrompt().then((ok) => {
+      if (!ok) return;
+      setModalMode('create');
+      setEditingTodo(null);
+    });
+  };
+
+  const handleLogin = () => {
+    // Only perform authentication; do not open the Add popup.
+    ensureAuthedOrPrompt();
   };
 
   return (
@@ -173,11 +203,16 @@ export default function TodoScreen() {
             onDelete={handleDelete}
           />
 
-          {!editingTodo && (
-            <Pressable style={styles.fab} onPress={handleStartCreate}>
-              <Text style={styles.fabLabel}>+</Text>
-            </Pressable>
-          )}
+          {!editingTodo &&
+            (isAuthed ? (
+              <Pressable style={styles.fab} onPress={handleStartCreate}>
+                <Text style={styles.fabLabel}>+</Text>
+              </Pressable>
+            ) : (
+              <Pressable style={styles.loginFab} onPress={handleLogin}>
+                <IconSymbol name="lock.fill" size={20} color="#ffffff" />
+              </Pressable>
+            ))}
 
           {modalMode && (
             <AddTaskModal
@@ -294,6 +329,25 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '600',
     marginTop: -2,
+  },
+  loginFab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: '#6362F9',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  loginFabLabel: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
