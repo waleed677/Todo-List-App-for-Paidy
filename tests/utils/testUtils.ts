@@ -1,5 +1,4 @@
-// Shared test utilities (render helpers, mock providers, etc.) will live here.
+import '@testing-library/jest-native/extend-expect';
 
-export {};
 
 
