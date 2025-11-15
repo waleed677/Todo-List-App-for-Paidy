@@ -9,6 +9,8 @@ export interface TodoItem {
   id: TodoId;
   title: string;
   description?: string;
+  deadlineDate?: string;
+  category?: string;
   status: TodoStatus;
   createdAt: number;
   updatedAt: number;

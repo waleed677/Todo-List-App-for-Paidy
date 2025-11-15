@@ -11,6 +11,8 @@ import { TextInput } from '@/components/ui/TextInput';
 export interface TodoFormValues {
   title: string;
   description?: string;
+  deadlineDate?: string;
+  category?: string;
 }
 
 export interface TodoFormProps {
@@ -23,6 +25,8 @@ export interface TodoFormProps {
 export function TodoForm({ mode, initialValues, onSubmit, onCancelEdit }: TodoFormProps) {
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [deadlineDate, setDeadlineDate] = useState(initialValues?.deadlineDate ?? '');
+  const [category, setCategory] = useState(initialValues?.category ?? '');
 
   useEffect(() => {
     // When initial values change (e.g. user picks a different item to edit),
@@ -30,9 +34,13 @@ export function TodoForm({ mode, initialValues, onSubmit, onCancelEdit }: TodoFo
     if (initialValues) {
       setTitle(initialValues.title ?? '');
       setDescription(initialValues.description ?? '');
+      setDeadlineDate(initialValues.deadlineDate ?? '');
+      setCategory(initialValues.category ?? '');
     } else {
       setTitle('');
       setDescription('');
+      setDeadlineDate('');
+      setCategory('');
     }
   }, [initialValues]);
 
@@ -45,6 +53,8 @@ export function TodoForm({ mode, initialValues, onSubmit, onCancelEdit }: TodoFo
     onSubmit({
       title: trimmed,
       description: description.trim() || undefined,
+      deadlineDate: deadlineDate.trim() || undefined,
+      category: category.trim() || undefined,
     });
   };
 
@@ -70,6 +80,18 @@ export function TodoForm({ mode, initialValues, onSubmit, onCancelEdit }: TodoFo
         onChangeText={setDescription}
         style={[styles.input, styles.multilineInput]}
         multiline
+      />
+      <TextInput
+        placeholder="Deadline date (optional)"
+        value={deadlineDate}
+        onChangeText={setDeadlineDate}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Category (optional)"
+        value={category}
+        onChangeText={setCategory}
+        style={styles.input}
       />
       <View style={styles.actionsRow}>
         {isEditing && (

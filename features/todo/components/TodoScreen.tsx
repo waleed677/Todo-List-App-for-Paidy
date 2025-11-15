@@ -7,6 +7,7 @@ import type { TodoItem } from '@/features/todo/types';
 import { useTodoStore } from '@/features/todo/state/todoStore';
 import { useTodoActions } from '@/features/todo/hooks/useTodoActions';
 
+import { AddTaskModal } from './AddTaskModal';
 import { TodoForm, type TodoFormValues } from './TodoForm';
 import { TodoList } from './TodoList';
 
@@ -57,6 +58,8 @@ export default function TodoScreen() {
         ? {
             title: editingTodo.title,
             description: editingTodo.description,
+            deadlineDate: editingTodo.deadlineDate,
+            category: editingTodo.category,
           }
         : undefined,
     [editingTodo],
@@ -69,6 +72,8 @@ export default function TodoScreen() {
           id: editingTodo.id,
           title: values.title,
           description: values.description,
+          deadlineDate: values.deadlineDate,
+          category: values.category,
         }),
       );
       if (result !== null) {
@@ -79,6 +84,8 @@ export default function TodoScreen() {
         addTodo({
           title: values.title,
           description: values.description,
+          deadlineDate: values.deadlineDate,
+          category: values.category,
         }),
       );
       if (result !== null) {
@@ -126,7 +133,7 @@ export default function TodoScreen() {
         </View>
 
         <View style={styles.card}>
-          {(isCreating || editingTodo) && (
+          {editingTodo && (
             <TodoForm
               mode={formMode}
               initialValues={formInitialValues}
@@ -146,6 +153,10 @@ export default function TodoScreen() {
             <Pressable style={styles.fab} onPress={handleStartCreate}>
               <Text style={styles.fabLabel}>+</Text>
             </Pressable>
+          )}
+
+          {isCreating && (
+            <AddTaskModal onSubmit={handleSubmit} onClose={() => setIsCreating(false)} />
           )}
         </View>
       </View>

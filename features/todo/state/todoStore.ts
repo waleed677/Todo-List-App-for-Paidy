@@ -8,12 +8,16 @@ import type { TodoItem, TodoStatus } from '@/features/todo/types';
 export interface CreateTodoInput {
   title: string;
   description?: string;
+  deadlineDate?: string;
+  category?: string;
 }
 
 export interface UpdateTodoInput {
   id: string;
   title: string;
   description?: string;
+  deadlineDate?: string;
+  category?: string;
 }
 
 export interface TodoStore {
@@ -33,6 +37,8 @@ export function useTodoStore(initialTodos: TodoItem[] = []): TodoStore {
       id: `${timestamp}-${Math.random().toString(16).slice(2)}`,
       title: input.title.trim(),
       description: input.description?.trim() || undefined,
+      deadlineDate: input.deadlineDate?.trim() || undefined,
+      category: input.category?.trim() || undefined,
       status: 'pending',
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -48,6 +54,8 @@ export function useTodoStore(initialTodos: TodoItem[] = []): TodoStore {
               ...todo,
               title: input.title.trim(),
               description: input.description?.trim() || undefined,
+              deadlineDate: input.deadlineDate?.trim() || undefined,
+              category: input.category?.trim() || undefined,
               updatedAt: Date.now(),
             }
           : todo,
