@@ -15,6 +15,8 @@ export function ScreenContainer({ children, style }: ScreenContainerProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // App-wide background should be white except for the dedicated splash screen.
+    backgroundColor: '#ffffff',
   },
 });
 

@@ -1,30 +1,10 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
 
-// Branded splash-style home screen.
-// Background: #F2F5FF, centered splash logo image.
+import TodoScreen from '@/features/todo/components/TodoScreen';
+
+// Home tab now shows the TODO list screen directly.
 
 export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Image
-        source={require('@/assets/images/splashLogo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-    </View>
-  );
+  return <TodoScreen />;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#6362F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 220,
-    height: 220,
-  },
-});

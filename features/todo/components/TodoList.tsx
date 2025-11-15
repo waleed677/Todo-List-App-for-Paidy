@@ -1,21 +1,42 @@
 import React from 'react';
-import { View } from 'react-native';
+import { FlatList } from 'react-native';
 
-import type { TodoItem } from '@/features/todo/types';
+import type { TodoItem as TodoItemType } from '@/features/todo/types';
+
+import { TodoItem } from './TodoItem';
+import { EmptyState } from './EmptyState';
 
 // TODO list component: responsible for rendering a collection of todo items.
-// Implementation will follow once state management is defined.
 
 export interface TodoListProps {
-  items: TodoItem[];
+  items: TodoItemType[];
+  onToggleStatus: (id: string) => void;
+  onEdit: (item: TodoItemType) => void;
+  onDelete: (id: string) => void;
 }
 
-export function TodoList(_props: TodoListProps) {
+export function TodoList({ items, onToggleStatus, onEdit, onDelete }: TodoListProps) {
+  if (!items.length) {
+    return <EmptyState />;
+  }
+
   return (
-    <View>
-      {/* TODO: Render list of TodoItem components */}
-    </View>
+    <FlatList
+      data={items}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <TodoItem
+          item={item}
+          onToggleStatus={onToggleStatus}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
+    />
   );
 }
+
+const styles = {};
+
 
 
