@@ -19,13 +19,15 @@ export function TodoItem({ item, onToggleStatus, onEdit, onDelete }: TodoItemPro
 
   return (
     <View style={styles.container}>
+      <View style={styles.leftColumn}>
+        <View style={[styles.statusIndicator, isCompleted && styles.statusIndicatorCompleted]}>
+          {isCompleted && <Text style={styles.statusCheck}>✓</Text>}
+        </View>
+      </View>
       <Pressable
         accessibilityRole="button"
         onPress={() => onToggleStatus(item.id)}
         style={styles.mainArea}>
-        <View style={[styles.statusIndicator, isCompleted && styles.statusIndicatorCompleted]}>
-          {isCompleted && <Text style={styles.statusCheck}>✓</Text>}
-        </View>
         <View style={styles.textContainer}>
           {item.deadlineDate ? (
             <Text style={styles.dateText}>{item.deadlineDate}</Text>
@@ -53,7 +55,7 @@ export function TodoItem({ item, onToggleStatus, onEdit, onDelete }: TodoItemPro
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginHorizontal: 16,
@@ -70,11 +72,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
+  leftColumn: {
+    marginRight: 12,
+  },
   mainArea: {
-    flexDirection: 'row',
     flex: 1,
-    alignItems: 'flex-start',
-    gap: 12,
   },
   statusIndicator: {
     width: 20,
@@ -82,7 +84,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#6362F9',
-    marginTop: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

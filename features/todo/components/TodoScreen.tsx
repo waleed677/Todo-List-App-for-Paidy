@@ -138,10 +138,20 @@ export default function TodoScreen() {
   const handleDelete = async (id: string) => {
     const ok = await ensureAuthedOrPrompt();
     if (!ok) return;
-    deleteTodo(id);
-    if (editingTodo?.id === id) {
-      setEditingTodo(null);
-    }
+
+    Alert.alert('Delete task', 'Are you sure you want to delete this task?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteTodo(id);
+          if (editingTodo?.id === id) {
+            setEditingTodo(null);
+          }
+        },
+      },
+    ]);
   };
 
   const handleStartCreate = () => {
