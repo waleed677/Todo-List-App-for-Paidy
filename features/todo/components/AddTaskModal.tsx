@@ -38,6 +38,12 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [dateValue, setDateValue] = useState<Date | null>(null);
+  const [fieldErrors, setFieldErrors] = useState({
+    title: false,
+    description: false,
+    date: false,
+    category: false,
+  });
 
   // Keep local form state in sync when editing a different task.
   useEffect(() => {
@@ -54,19 +60,37 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
       setCategory('');
       setIsCompleted(false);
     }
+    setFieldErrors({
+      title: false,
+      description: false,
+      date: false,
+      category: false,
+    });
   }, [initialValues, mode]);
 
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
+    const trimmedDescription = description.trim();
+    const trimmedDate = deadlineDate.trim();
+    const trimmedCategory = category.trim();
+
+    const nextErrors = {
+      title: !trimmedTitle,
+      description: !trimmedDescription,
+      date: !trimmedDate,
+      category: !trimmedCategory,
+    };
+    setFieldErrors(nextErrors);
+
+    if (nextErrors.title || nextErrors.description || nextErrors.date || nextErrors.category) {
       return;
     }
 
     await onSubmit({
       title: trimmedTitle,
-      description: description.trim() || undefined,
-      deadlineDate: deadlineDate.trim() || undefined,
-      category: category.trim() || undefined,
+      description: trimmedDescription,
+      deadlineDate: trimmedDate,
+      category: trimmedCategory,
       isCompleted,
     });
 
@@ -121,26 +145,48 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
               placeholder="Title"
               placeholderTextColor="#9ca3af"
               value={title}
-              onChangeText={setTitle}
-              style={styles.input}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (fieldErrors.title && text.trim()) {
+                  setFieldErrors((prev) => ({ ...prev, title: false }));
+                }
+              }}
+              style={[styles.input, fieldErrors.title && styles.inputError]}
             />
             <TextInput
               placeholder="Description"
               placeholderTextColor="#9ca3af"
               value={description}
-              onChangeText={setDescription}
-              style={[styles.input, styles.multilineInput]}
+              onChangeText={(text) => {
+                setDescription(text);
+                if (fieldErrors.description && text.trim()) {
+                  setFieldErrors((prev) => ({ ...prev, description: false }));
+                }
+              }}
+              style={[
+                styles.input,
+                styles.multilineInput,
+                fieldErrors.description && styles.inputError,
+              ]}
               multiline
             />
             <Pressable
-              style={[styles.input, styles.dropdownTrigger]}
+              style={[
+                styles.input,
+                styles.dropdownTrigger,
+                fieldErrors.date && styles.inputError,
+              ]}
               onPress={handleOpenDatePicker}>
               <Text style={deadlineDate ? styles.dropdownValue : styles.dropdownPlaceholder}>
                 {deadlineDate || 'Select date'}
               </Text>
             </Pressable>
             <Pressable
-              style={[styles.input, styles.dropdownTrigger]}
+              style={[
+                styles.input,
+                styles.dropdownTrigger,
+                fieldErrors.category && styles.inputError,
+              ]}
               onPress={() => setIsCategoryOpen((open) => !open)}>
               <Text style={category ? styles.dropdownValue : styles.dropdownPlaceholder}>
                 {category || 'Select category'}
@@ -164,6 +210,9 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
                     style={styles.dropdownItem}
                     onPress={() => {
                       setCategory(option);
+                      if (fieldErrors.category) {
+                        setFieldErrors((prev) => ({ ...prev, category: false }));
+                      }
                       setIsCategoryOpen(false);
                     }}>
                     <Text style={styles.dropdownItemLabel}>{option}</Text>
@@ -190,6 +239,9 @@ export function AddTaskModal({ mode, initialValues, onSubmit, onClose }: AddTask
                       const base = dateValue ?? new Date();
                       setDateValue(base);
                       setDeadlineDate(formatDate(base));
+                      if (fieldErrors.date) {
+                        setFieldErrors((prev) => ({ ...prev, date: false }));
+                      }
                     }
                     setIsDatePickerOpen(false);
                   }}
@@ -293,6 +345,10 @@ const styles = StyleSheet.create({
   },
   dropdownValue: {
     color: '#111827',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#FEE2E2',
   },
   dropdownMenu: {
     marginTop: 4,

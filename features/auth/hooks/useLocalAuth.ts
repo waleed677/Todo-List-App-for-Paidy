@@ -17,6 +17,10 @@ export interface LocalAuthResult {
 // trusted for the lifetime of the app process and skip re-prompting.
 let hasSessionAuth = false;
 
+export function resetLocalAuthSession() {
+  hasSessionAuth = false;
+}
+
 export function useLocalAuth() {
   const [status, setStatus] = useState<LocalAuthStatus>('idle');
   const [lastError, setLastError] = useState<string | undefined>();

@@ -6,7 +6,7 @@ import { Body, Title } from '@/components/ui/Typography';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { TodoItem } from '@/features/todo/types';
 import { useTodoStore } from '@/features/todo/state/todoStore';
-import { useLocalAuth } from '@/features/auth/hooks/useLocalAuth';
+import { resetLocalAuthSession, useLocalAuth } from '@/features/auth/hooks/useLocalAuth';
 
 import { AddTaskModal } from './AddTaskModal';
 import { TodoForm, type TodoFormValues } from './TodoForm';
@@ -54,6 +54,7 @@ export default function TodoScreen() {
   const [filter, setFilter] = useState<FilterValue>('all');
   const { authenticate } = useLocalAuth();
   const [isAuthed, setIsAuthed] = useState(false);
+  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const todayLabel = useMemo(() => formatTodayLabel(new Date()), []);
 
   const filteredTodos = useMemo(() => {
@@ -168,6 +169,14 @@ export default function TodoScreen() {
     ensureAuthedOrPrompt();
   };
 
+  const handleLogout = () => {
+    resetLocalAuthSession();
+    setIsAuthed(false);
+    setEditingTodo(null);
+    setModalMode(null);
+    setIsHeaderMenuOpen(false);
+  };
+
   return (
     <ScreenContainer style={styles.screenBackground}>
       <View style={styles.root}>
@@ -176,9 +185,22 @@ export default function TodoScreen() {
             <Body style={styles.date}>{todayLabel}</Body>
             <Title style={styles.title}>Todoist</Title>
           </View>
-          <Pressable hitSlop={8}>
-            <Text style={styles.headerMenu}>⋯</Text>
-          </Pressable>
+          {isAuthed && (
+            <View>
+              <Pressable
+                hitSlop={8}
+                onPress={() => setIsHeaderMenuOpen((open) => !open)}>
+                <Text style={styles.headerMenu}>⋯</Text>
+              </Pressable>
+              {isHeaderMenuOpen && (
+                <View style={styles.headerMenuDropdown}>
+                  <Pressable style={styles.headerMenuItem} onPress={handleLogout}>
+                    <Text style={styles.headerMenuItemText}>Logout</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.card}>
@@ -271,6 +293,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    position: 'relative',
   },
   date: {
     fontSize: 14,
@@ -286,6 +309,31 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#ffffff',
     paddingHorizontal: 4,
+  },
+  headerMenuDropdown: {
+    position: 'absolute',
+    top: 40,
+    right: 0,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+    minWidth: 120,
+    zIndex: 10,
+  },
+  headerMenuItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  headerMenuItemText: {
+    fontSize: 14,
+    color: '#ef4444',
+    fontWeight: '500',
   },
   subtitle: {
     marginTop: 4,
