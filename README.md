@@ -17,10 +17,12 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    ```
 
 ## Screenshots
+<p align="left" style="display: flex; gap: 10px;">
+<img src="https://raw.githubusercontent.com/waleed677/Todo-List-App-for-Paidy/master/assets/images/screenshot3.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/waleed677/Todo-List-App-for-Paidy/master/assets/images/screenshot2.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/waleed677/Todo-List-App-for-Paidy/master/assets/images/screenshot4.jpeg" width="300" />
+<img src="https://raw.githubusercontent.com/waleed677/Todo-List-App-for-Paidy/master/assets/images/screenshot1.jpeg" width="300" />
+</p>
 
-![](assets/images/screenshot1.jpeg)
-![](assets/images/screenshot2.jpeg)
-![](assets/images/screenshot3.jpeg)
-![](assets/images/screenshot4.jpeg)
 
 
