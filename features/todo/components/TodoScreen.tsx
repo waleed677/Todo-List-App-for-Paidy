@@ -44,12 +44,25 @@ function getOrdinalSuffix(day: number): string {
   }
 }
 
+type FilterValue = 'all' | 'completed' | 'pending';
+
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, deleteTodo, toggleTodoStatus } = useTodoStore();
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [filter, setFilter] = useState<FilterValue>('all');
   const { withAuth } = useTodoActions();
   const todayLabel = useMemo(() => formatTodayLabel(new Date()), []);
+
+  const filteredTodos = useMemo(() => {
+    if (filter === 'completed') {
+      return todos.filter((todo) => todo.status === 'completed');
+    }
+    if (filter === 'pending') {
+      return todos.filter((todo) => todo.status === 'pending');
+    }
+    return todos;
+  }, [todos, filter]);
 
   const formMode = editingTodo ? 'edit' : 'create';
   const formInitialValues: TodoFormValues | undefined = useMemo(
@@ -142,8 +155,32 @@ export default function TodoScreen() {
             />
           )}
 
+          <View style={styles.filterRow}>
+            {(['all', 'completed', 'pending'] as FilterValue[]).map((value) => (
+              <Pressable
+                key={value}
+                onPress={() => setFilter(value)}
+                style={[
+                  styles.filterChip,
+                  filter === value && styles.filterChipActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.filterLabel,
+                    filter === value && styles.filterLabelActive,
+                  ]}>
+                  {value === 'all'
+                    ? 'All'
+                    : value === 'completed'
+                    ? 'Completed'
+                    : 'Pending'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
           <TodoList
-            items={todos}
+            items={filteredTodos}
             onToggleStatus={handleToggleStatus}
             onEdit={handleEdit}
             onDelete={handleDelete}
@@ -206,6 +243,33 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 4,
     color: '#6b7280',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#ffffff',
+  },
+  filterChipActive: {
+    backgroundColor: '#6362F9',
+    borderColor: '#6362F9',
+  },
+  filterLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  filterLabelActive: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   fab: {
     position: 'absolute',

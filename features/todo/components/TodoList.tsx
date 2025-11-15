@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 
 import type { TodoItem as TodoItemType } from '@/features/todo/types';
 
@@ -24,6 +24,7 @@ export function TodoList({ items, onToggleStatus, onEdit, onDelete }: TodoListPr
     <FlatList
       data={items}
       keyExtractor={(item) => item.id}
+      contentContainerStyle={styles.listContent}
       renderItem={({ item }) => (
         <TodoItem
           item={item}
@@ -36,7 +37,12 @@ export function TodoList({ items, onToggleStatus, onEdit, onDelete }: TodoListPr
   );
 }
 
-const styles = {};
+const styles = StyleSheet.create({
+  listContent: {
+    paddingTop: 32,
+    paddingBottom: 12,
+  },
+});
 
 
 

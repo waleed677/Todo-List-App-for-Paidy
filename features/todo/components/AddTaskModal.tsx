@@ -70,11 +70,17 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
       return;
     }
 
-    // When the user selects a date, store and format it, then close the picker.
+    // When the user selects a date, store and format it.
     const currentDate = selectedDate ?? dateValue ?? new Date();
     setDateValue(currentDate);
     setDeadlineDate(formatDate(currentDate));
-    setIsDatePickerOpen(false);
+
+    // On Android, the native picker has explicit confirm/cancel buttons,
+    // so we can safely close after selection. On iOS we keep it open so
+    // users can scroll the spinner without it disappearing.
+    if (Platform.OS === 'android') {
+      setIsDatePickerOpen(false);
+    }
   };
 
   return (
@@ -143,7 +149,12 @@ export function AddTaskModal({ onSubmit, onClose }: AddTaskModalProps) {
 
           {isDatePickerOpen && (
             <View style={styles.datePickerContainer}>
-              <Text style={styles.datePickerLabel}>Select date</Text>
+              <View style={styles.datePickerHeader}>
+                <Text style={styles.datePickerLabel}>Select date</Text>
+                <Pressable onPress={() => setIsDatePickerOpen(false)} hitSlop={8}>
+                  <Text style={styles.datePickerDone}>Done</Text>
+                </Pressable>
+              </View>
               <DateTimePicker
                 mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
@@ -267,12 +278,23 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#e5e7eb',
     paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
   datePickerLabel: {
     fontSize: 14,
     color: '#111827',
     marginBottom: 8,
+  },
+  datePickerDone: {
+    fontSize: 14,
+    color: '#6362F9',
+    fontWeight: '600',
   },
 });
 
