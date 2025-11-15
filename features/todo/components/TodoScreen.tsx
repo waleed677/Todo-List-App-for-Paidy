@@ -16,11 +16,39 @@ import { TodoList } from './TodoList';
 // - Allows creating, editing, deleting, and toggling completion of tasks.
 // - Enforces authentication before any mutation using useTodoActions.withAuth.
 
+function formatTodayLabel(date: Date): string {
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const weekday = weekdays[date.getDay()];
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+
+  return `${weekday}, ${day}${getOrdinalSuffix(day)} ${month}`;
+}
+
+function getOrdinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) {
+    return 'th';
+  }
+  switch (day % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
+
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, deleteTodo, toggleTodoStatus } = useTodoStore();
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const { withAuth } = useTodoActions();
+  const todayLabel = useMemo(() => formatTodayLabel(new Date()), []);
 
   const formMode = editingTodo ? 'edit' : 'create';
   const formInitialValues: TodoFormValues | undefined = useMemo(
@@ -85,34 +113,41 @@ export default function TodoScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={styles.screenBackground}>
       <View style={styles.root}>
         <View style={styles.header}>
-          <Title style={styles.title}>Todoist</Title>
-          <Body style={styles.subtitle}>Stay on top of what matters today.</Body>
+          <View>
+            <Body style={styles.date}>{todayLabel}</Body>
+            <Title style={styles.title}>Todoist</Title>
+          </View>
+          <Pressable hitSlop={8}>
+            <Text style={styles.headerMenu}>⋯</Text>
+          </Pressable>
         </View>
 
-        {(isCreating || editingTodo) && (
-          <TodoForm
-            mode={formMode}
-            initialValues={formInitialValues}
-            onSubmit={handleSubmit}
-            onCancelEdit={handleCancelEdit}
+        <View style={styles.card}>
+          {(isCreating || editingTodo) && (
+            <TodoForm
+              mode={formMode}
+              initialValues={formInitialValues}
+              onSubmit={handleSubmit}
+              onCancelEdit={handleCancelEdit}
+            />
+          )}
+
+          <TodoList
+            items={todos}
+            onToggleStatus={handleToggleStatus}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
-        )}
 
-        <TodoList
-          items={todos}
-          onToggleStatus={handleToggleStatus}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        {!editingTodo && (
-          <Pressable style={styles.fab} onPress={handleStartCreate}>
-            <Text style={styles.fabLabel}>+</Text>
-          </Pressable>
-        )}
+          {!editingTodo && (
+            <Pressable style={styles.fab} onPress={handleStartCreate}>
+              <Text style={styles.fabLabel}>+</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
     </ScreenContainer>
   );
@@ -122,16 +157,40 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+  screenBackground: {
+    // Full-screen primary background behind the white content card.
+    backgroundColor: '#6362F9',
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    marginTop: 25,
+    borderTopLeftRadius: 48,
+    // Clip children to respect the rounded corner.
+    overflow: 'hidden',
+  },
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
-    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  date: {
+    fontSize: 14,
+    color: '#ffffff',
+    marginBottom: 4,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: '#ffffff',
+  },
+  headerMenu: {
+    fontSize: 24,
+    color: '#ffffff',
+    paddingHorizontal: 4,
   },
   subtitle: {
     marginTop: 4,
