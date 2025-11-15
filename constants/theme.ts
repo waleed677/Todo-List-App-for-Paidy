@@ -5,7 +5,9 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
+// Primary brand color for the app.
+// Light theme primary: #6362F9 (updated as requested).
+const tintColorLight = '#6362F9';
 const tintColorDark = '#fff';
 
 export const Colors = {
